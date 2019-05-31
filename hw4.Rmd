@@ -1,0 +1,17 @@
+---
+title: "Homework 4"
+author: "Gage Clawson, Juan Silva"
+date: "5/31/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+#read in data
+carbon <- read_csv("HW4Data.csv")
+```
+
