@@ -8,10 +8,34 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(janitor)
 ```
 
 ```{r}
 #read in data
-carbon <- read_csv("HW4Data.csv")
+carbon <- read_csv("HW4Data.csv") %>%
+  clean_names()
 ```
+
+1. Write down a plausible functional form for the marginal cost of abatement for sector A. Use regression analysis to estimate the parameters of that function. Repeating this for sectors B, C, and D will give you a model of the marginal cost of abatement function for each sector. How well do your models fit the data for each sector? You may need to experiment with different functional forms. Produce a plot of the estimated marginal abatement cost functions in all four sectors (this plot should go in your memo).
+
+```{r}
+#use regression to define functions for marginal cost of abatement
+lm_a <- lm(data = carbon, mc_a ~ abatement) 
+summary(lm_a)
+# mc_a = -8.64448 + 0.57684*abatement
+
+lm_b <- lm(data = carbon, mc_b ~ abatement) 
+summary(lm_b)
+# mc_b = 9.31770 + 0.19874*abatement
+
+lm_c <- lm(data = carbon, mc_c ~ abatement) 
+summary(lm_c)
+# mc_c = -11.65503 + 0.78383*abatement
+
+lm_d <- lm(data = carbon, mc_d ~ abatement) 
+summary(lm_d)
+# mc_d = 9.68751 + 0.25993*abatement
+```
+
 
