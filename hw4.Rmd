@@ -20,6 +20,8 @@ carbon <- read_csv("HW4Data.csv") %>%
 1. Write down a plausible functional form for the marginal cost of abatement for sector A. Use regression analysis to estimate the parameters of that function. Repeating this for sectors B, C, and D will give you a model of the marginal cost of abatement function for each sector. How well do your models fit the data for each sector? You may need to experiment with different functional forms. Produce a plot of the estimated marginal abatement cost functions in all four sectors (this plot should go in your memo).
 
 ```{r}
+carbon_tidy <- gather(carbon, sector, mc, mc_a:mc_d)
+
 #use regression to define functions for marginal cost of abatement
 lm_a <- lm(data = carbon, mc_a ~ abatement) 
 summary(lm_a)
@@ -36,6 +38,40 @@ summary(lm_c)
 lm_d <- lm(data = carbon, mc_d ~ abatement) 
 summary(lm_d)
 # mc_d = 9.68751 + 0.25993*abatement
+
+## plot all the data and corresponding regression lines. ggplot one is better IMO
+ggplot(data = carbon_tidy, aes(x=abatement, y = mc)) + geom_point() +
+  geom_smooth(method="lm", se = FALSE) +
+  facet_wrap(~sector, scales = "free") +
+  theme_bw() +
+  labs(x = "Abatement", y = "Marginal Cost", title = "Estimated Marginal Abatement Cost Functions") 
+
+par(mfrow=c(2,2))
+plot(carbon$abatement, carbon$mc_a)
+abline(lm_a)
+plot(carbon$abatement, carbon$mc_b, type = "p")
+abline(lm_b)
+plot(carbon$abatement, carbon$mc_c, type = "p")
+abline(lm_c)
+plot(carbon$abatement, carbon$mc_d, type = "p")
+abline(lm_d)
+
 ```
+
+2. Using these models and the current level of carbon emissions, derive each sector’s demand curve for carbon emissions. In other words, how much would each sector be willing to pay for the right to pollute the first unit, second unit, etc? Draw these demand curves on a graph. Which sector is willing to pay the most for the first unit of carbon emissions?
+
+```{r}
+#calculate the y intercept by plugging in emissions to linear regression models
+
+sector_A_y <- lm_a$coefficients[2]*180 + lm_a$coefficients[1]
+sector_B_y <- lm_b$coefficients[2]*200 + lm_b$coefficients[1]
+sector_C_y <- lm_c$coefficients[2]*220 + lm_c$coefficients[1]
+sector_D_y <- lm_d$coefficients[2]*300 + lm_d$coefficients[1]
+
+
+#define the demand curves for each sector 
+
+```
+
 
 
