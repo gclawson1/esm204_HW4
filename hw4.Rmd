@@ -9,9 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(janitor)
+library(stargazer)
 ```
 
-```{r}
+```{r, include=FALSE}
 #read in data
 carbon <- read_csv("HW4Data.csv") %>%
   clean_names()
@@ -19,8 +20,14 @@ carbon <- read_csv("HW4Data.csv") %>%
 
 1. Write down a plausible functional form for the marginal cost of abatement for sector A. Use regression analysis to estimate the parameters of that function. Repeating this for sectors B, C, and D will give you a model of the marginal cost of abatement function for each sector. How well do your models fit the data for each sector? You may need to experiment with different functional forms. Produce a plot of the estimated marginal abatement cost functions in all four sectors (this plot should go in your memo).
 
-```{r}
-carbon_tidy <- gather(carbon, sector, mc, mc_a:mc_d)
+```{r, include = FALSE}
+carbon_tidy <- gather(carbon, sector, mc, mc_a:mc_d) %>%
+  mutate(sector = case_when(
+    sector == "mc_a" ~ "Sector A",
+    sector == "mc_b" ~ "Sector B",
+    sector == "mc_c" ~ "Sector C",
+    sector == "mc_d" ~ "Sector D"
+  ))
 
 #use regression to define functions for marginal cost of abatement
 lm_a <- lm(data = carbon, mc_a ~ abatement) 
@@ -39,28 +46,34 @@ lm_d <- lm(data = carbon, mc_d ~ abatement)
 summary(lm_d)
 # mc_d = 9.68751 + 0.25993*abatement
 
+```
+
+
+```{r, echo = FALSE}
+stargazer(lm_a, lm_b, lm_c, lm_d, type="text", title="Table 1: Regression Results")
+```
+
+
+```{r, echo = FALSE}
 ## plot all the data and corresponding regression lines. ggplot one is better IMO
 ggplot(data = carbon_tidy, aes(x=abatement, y = mc)) + geom_point() +
   geom_smooth(method="lm", se = FALSE) +
   facet_wrap(~sector, scales = "free") +
   theme_bw() +
-  labs(x = "Abatement", y = "Marginal Cost", title = "Estimated Marginal Abatement Cost Functions") 
+  labs(x = "Abatement (tons)", y = "Marginal Cost", title = "Estimated Marginal Abatement Cost Functions") 
 
-par(mfrow=c(2,2))
-plot(carbon$abatement, carbon$mc_a)
-abline(lm_a)
-plot(carbon$abatement, carbon$mc_b, type = "p")
-abline(lm_b)
-plot(carbon$abatement, carbon$mc_c, type = "p")
-abline(lm_c)
-plot(carbon$abatement, carbon$mc_d, type = "p")
-abline(lm_d)
 
 ```
 
+Marginal Cost of Abatement Functions: 
+$$MC_A= -8.65 + 0.58(Abatement)$$
+$$MC_B= 9.32 + 0.2 (Abatement)$$
+$$MC_C = -11.66 + 0.78 (Abatement)$$
+$$MC_D = 9.69 + 0.26 (Abatement)$$
+
 2. Using these models and the current level of carbon emissions, derive each sector’s demand curve for carbon emissions. In other words, how much would each sector be willing to pay for the right to pollute the first unit, second unit, etc? Draw these demand curves on a graph. Which sector is willing to pay the most for the first unit of carbon emissions?
 
-```{r}
+```{r, include = FALSE}
 #calculate the y intercept by plugging in emissions to linear regression models
 
 sector_A_y <- lm_a$coefficients[2]*180 + lm_a$coefficients[1]
@@ -70,8 +83,78 @@ sector_D_y <- lm_d$coefficients[2]*300 + lm_d$coefficients[1]
 
 
 #define the demand curves for each sector 
+slope_A <- -sector_A_y/180 
+demand_A <- function(x) {
+  slope_A*x + sector_A_y
+  
+}
+
+
+slope_B <- -sector_B_y/200
+demand_B <- function(x) {
+  slope_B*x + sector_B_y
+  
+}
+
+slope_C <- -sector_C_y/220
+demand_C <- function(x) {
+  slope_C*x + sector_C_y
+  
+}
+
+slope_D <- -sector_D_y/300
+demand_D <- function(x) {
+  slope_D*x + sector_D_y
+  
+}
+
+
+carbon_demand <-  carbon %>%
+  mutate(demandA = demand_A(x = abatement)) %>% 
+  mutate(demandB = demand_B(x = abatement)) %>% 
+  mutate(demandC = demand_C(x = abatement)) %>%
+  mutate(demandD = demand_D(x = abatement))
+```
+
+```{r, echo = FALSE}
+
+#ggplot(carbon_demand) +
+#  geom_smooth(aes(abatement,demandA), method=lm, se=FALSE, color = "red") +
+#  geom_smooth(aes(abatement,demandB), method=lm, se=FALSE, color = "blue") +
+#  geom_smooth(aes(abatement,demandC), method=lm, se=FALSE, color = "green") +
+#  geom_smooth(aes(abatement,demandD), method=lm, se=FALSE, color = "orange")
+  
+
+carbon_demand_tidy <- carbon_demand %>%
+  select(-mc_a, -mc_b, - mc_c, -mc_d) %>%
+  gather(sector, demand, demandA:demandD)%>%
+    mutate(sector = case_when(
+    sector == "demandA" ~ "Sector A",
+    sector == "demandB" ~ "Sector B",
+    sector == "demandC" ~ "Sector C",
+    sector == "demandD" ~ "Sector D"
+  ))
+
+ggplot(data = carbon_demand_tidy, aes(x=abatement, y = demand)) + 
+  geom_smooth(method="lm", se = FALSE) +
+  facet_wrap(~sector, scales = "free") +
+  theme_bw() +
+  labs(x = "Carbon Emissions (tons)", y = "Price per ton", title = "Estimated Demand Curves for Carbon Emissions") 
+
+
+
 
 ```
+
+Demand for emission functions:
+$$Demand_A = -0.529(Emissions) + 95.2 $$
+$$Demand_B = -0.245(Emissions) + 49.1 $$
+$$Demand_C =-0.731(Emissions) + 160.8 $$
+$$Demand_D = -0.292 (Emissions)+ 87.67 $$
+
+ - Sector C is willing to pay the most for the first unit of carbon emissions. 
+ 
+ 
 
 
 
