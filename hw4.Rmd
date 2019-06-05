@@ -219,6 +219,117 @@ marg_benefit_ag <- data.frame(marg_benefit_pollution = seq(161, 0 , -1)) %>%
     marg_benefit_pollution <= demand_d_int, (demand_d_int - marg_benefit_pollution)/slope_d, 0 
     )) %>%
   mutate(ag_country_X = emissions_A + emissions_B + emissions_C)
+
+#em_A
+em_A_fn <- function(price){
+  -price/slope_a + demand_a_int/slope_a
+  
+}
+
+
+em_slope_a <- -1/slope_a
+em_int_a <- demand_a_int/slope_a
+
+#em_B
+em_B_fn <- function(price){
+  -price/slope_b + demand_b_int/slope_b
+  
+}
+
+em_slope_b <- -1/slope_b
+em_int_b <- demand_b_int/slope_b
+
+
+#em_C
+em_C_fn <- function(price){
+  -price/slope_c + demand_c_int/slope_c
+  
+}
+
+em_slope_c <- -1/slope_c
+em_int_c <- demand_c_int/slope_c
+
+
+#em_ag 
+em_slope_ag <- em_slope_a+em_slope_b+em_slope_c
+em_int_ag <- em_int_a + em_int_b + em_int_c
+em_ag_fn <- function(price){
+  price*em_slope_ag + em_int_ag
+  
+}
+
+price_slope_ag <- function(emissions){
+  -em_int_ag/em_slope_ag + emissions/em_slope_ag
+  
+} 
+
+tax <- price_slope_ag(300)
+
+```
+
+```{r}
+#part a 
+
+demand_A_fn_fixed <- function(x){
+  -slope_a*(x) + demand_a_int 
+}
+
+demand_B_fn_fixed <- function(x){
+  -slope_b*(x) + demand_b_int 
+}
+
+demand_C_fn_fixed <- function(x){
+  -slope_c*(x) + demand_c_int 
+}
+
+
+polluted_units_C <- 120 #polluted units for sector C
+
+polluted_units_B <- 100 #polluted units for sector B
+
+polluted_units_A <- 80 #polluted units for sector A
+
+abated_units_A <- 100 #abated units for sector A
+
+abated_units_B <- 100 #abated units for sector B
+
+abated_units_C <- 100 #abated units for sector C
+
+
+##C NUMBERS WITHOUT TAX
+pollution_benefit_C <- 120*demand_C_fn_fixed(120) + 0.5*(demand_c_int - demand_C_fn_fixed(120))*120
+#13650.87 
+
+total_benefit_C <- integrate(demand_C_fn_fixed, 0 , 220)$value
+
+abatement_cost_C <- total_benefit_C - pollution_benefit_C
+#2753.63 
+
+#A NUMBERS WITHOUT TAX
+pollution_benefit_A <- 80*demand_A_fn_fixed(80) + 0.5*(demand_a_int - demand_A_fn_fixed(80))*80
+#5769.071
+
+total_benefit_A <- integrate(demand_A_fn_fixed, 0 , 180)$value
+
+abatement_cost_A <- total_benefit_A - pollution_benefit_A
+#2019.762 
+
+#B NUMBERS WITHOUT TAX
+pollution_benefit_B <- 100*demand_B_fn_fixed(100) + 0.5*(demand_b_int - demand_B_fn_fixed(100))*100
+#3912.934
+
+total_benefit_B <- integrate(demand_B_fn_fixed, 0 , 200)$value
+
+abatement_cost_B <- total_benefit_B - pollution_benefit_B
+#1925.491 
+
+
+######### Aggregated Costs and Benefits #########
+abatement_cost_aggregated <- abatement_cost_A + abatement_cost_B + abatement_cost_C
+#6698.883
+
+pollution_benefit_aggregated <- pollution_benefit_A + pollution_benefit_B + pollution_benefit_C
+#23332.87 
 ```
 
 
@@ -236,6 +347,79 @@ plot(marg_benefit_ag$ag_country_X, marg_benefit_ag$marg_benefit_pollution, main 
 lines(marg_benefit$emissions_A, marg_benefit$demand_A, main = "Sector A", xlab = "Pollution Emitted (Tons)", ylab = "Marginal Benefit ($/Ton)", type = "l", col = "green")
 lines(marg_benefit$emissions_B, marg_benefit$demand_B, main = "Sector B", xlab = "Pollution Emitted (Tons)", ylab = "Marginal Benefit ($/Ton)", type = "l", col = "blue")
 lines(marg_benefit$emissions_C, marg_benefit$demand_C, main = "Sector C", xlab = "Pollution Emitted (Tons)", ylab = "Marginal Benefit ($/Ton)", type = "l", col = "orange")
+abline(h=tax, lty= 2)
+
+```
+
+
+```{r}
+#3b 
+
+polluted_units_C_tax <- em_C_fn(tax) #polluted units for sector C
+#154.830468933185 
+polluted_units_B_tax <- em_B_fn(tax) #polluted units for sector B
+#48.5044240323858 
+polluted_units_A_tax <- em_A_fn(tax) #polluted units for sector A
+#96.6651070344293
+abated_units_A_tax <- (intercept_a - tax)/ -slope_a #abated units for sector A
+#83.3348929655707 
+abated_units_B_tax <- (intercept_b - tax)/ -slope_b #abated units for sector B
+#151.495575967614 
+abated_units_C_tax <- (intercept_c - tax)/ -slope_c #abated units for sector C
+#65.169531066815 
+
+##C NUMBERS W TAX
+pollution_benefit_C_tax <- polluted_units_C_tax*tax + 0.5*polluted_units_C_tax*(demand_c_int-tax)
+#15499.57
+total_benefit_C_tax <- integrate(demand_C_fn, 0 , 220)$value
+
+abatement_cost_C_tax <- total_benefit_C - pollution_benefit_C
+#904.9294 
+
+#A NUMBERS WITH TAX
+pollution_benefit_A_tax <- polluted_units_A_tax*tax + 0.5*polluted_units_A_tax*(demand_a_int-tax)
+#6506.221 
+total_benefit_A_tax <- integrate(demand_A_fn, 0 , 180)$value
+
+abatement_cost_A_tax <- total_benefit_A - pollution_benefit_A
+#1282.612 
+
+#B NUMBERS WITH TAX
+pollution_benefit_B_tax <- polluted_units_B_tax*tax + 0.5*polluted_units_B_tax*(demand_b_int-tax)
+#2146.154
+total_benefit_B_tax <- integrate(demand_B_fn, 0 , 200)$value
+
+abatement_cost_B_tax <- total_benefit_B - pollution_benefit_B
+#3692.271 
+
+
+######### Aggregated Costs and Benefits #########
+abatement_cost_aggregated_tax <- abatement_cost_A + abatement_cost_B + abatement_cost_C
+#5879.812
+
+pollution_benefit_aggregated_tax <- pollution_benefit_A + pollution_benefit_B + pollution_benefit_C
+#24151.94 
+
+tax_revenue_A <- tax*polluted_units_A_tax
+#3811.175
+
+tax_revenue_B <- tax*polluted_units_B_tax
+#1912.364 
+
+tax_revenue_C <- tax*polluted_units_C_tax
+#6104.436
+
+
+tax_revenue <- tax_revenue_A + tax_revenue_B + tax_revenue_C
+#11827.97
+```
+
+```{r}
+#3c 
+#B will sell because they get the least benefit from emitting
+#A and C will buy because they get more benefit from emitting
+# C will buy the most because they have the highest benefit from emitting one more unit. 
+
 
 ```
 
