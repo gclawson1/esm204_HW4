@@ -2,7 +2,10 @@
 title: "Homework 4"
 author: "Gage Clawson, Juan Silva"
 date: "5/31/2019"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -154,7 +157,113 @@ $$Demand_D = -0.292 (Emissions)+ 87.67 $$
 
  - Sector C is willing to pay the most for the first unit of carbon emissions. 
  
+ 3. Now focus on country X (which contains sectors A, B, and C). Assume there are no “co-benefits” from carbon abatement (i.e. that there are no local pollutants that are affected by carbon abatement). Suppose to meet the Paris Accord commitments, country X needs to cut all carbon emissions in half. For each of the policy options listed below, derive: (1) the total cost of meeting the target in country X, (2) the cost (or benefit) to each sector, and (3) the tax revenue generated.
+  a. Cap on carbon. Each sector (A, B, and C) must cut its carbon emissions by 100 tons (thus reducing total emissions from 600 down to 300).
+  b. Tax on carbon. To emit a ton of carbon in country X, you must pay a tax of $t. You will need to find the tax that accomplishes the desired reduction.
+  c. Cap and trade. Each sector (A, B, C) is allocated carbon permits equal to their current emissions minus 100 (same as in (a) above), thus achieving the total reduction of 300. Then, these three sectors are allowed to trade with each other. You will need to derive the outcome of that trading.
+
+#3. 
+#a. Cap on carbon: 300 tons in Country x total 
+ - We calculated the lost benefits to each sector using the demand functions previously described by finding the area under each of those curves until 100. 
  
+```{r, include = FALSE}
+#part a 
+
+abate<-c(100, 100, 100, 300)
+
+MCa <- demand_A(100)
+MCb <- demand_B(100)
+MCc <- demand_C(100)
+
+MC <- rbind(MCa, MCb, MCc, NA)
+
+costa <- integrate(demand_A, 0, 100)
+costa <- costa$value
+costb <- integrate(demand_B, 0, 100)
+costb <- costb$value
+costc <- integrate(demand_C, 0, 100)
+costc <- costc$value
+totalcost <- sum(costa, costb, costc)
+
+cost <- rbind(costa, costb, costc, totalcost)
+
+parta<- cbind(abate, MC, cost)
+colnames(parta)=c("Units abated","Marginal cost", "Cost")
+row.names(parta)=c("Sector A", "Sector B", "Sector C", "Total Country X")
+parta
+```
+
+```{r, echo=FALSE}
+round(parta, 0)
+```
+
+
+$$Abatement_{ag} = 600 - 7.335*MC$$
+$$MC_{ag} = 81.8 - 0.136*Abatement$$
+
+$$Abatement_A = 180 - 1.89*MC$$
+$$Abatement_B = 200 - 2.08*MC$$
+
+$$Abatement_C = 220 - 1.37*MC$$
+
+```{r, include = FALSE}
+##calculations for finding the above formulas: 
+em_A <- -sector_A_y/slope_A
+em_B <- -sector_B_y/slope_B
+em_C <- -sector_C_y/slope_C
+
+abate_ag_y <- em_A + em_B + em_C
+
+
+abate_slope_ag <- 1/slope_A + 1/slope_B + 1/slope_C
+
+mc_ag_y = -abate_ag_y/abate_slope_ag
+
+mc_slope_ag <- 1/abate_slope_ag
+
+```
+
+
+```{r, include = FALSE}
+#tax problem
+MC<- mc_ag_y + mc_slope_ag*300
+
+a <- 180
+b <- 200
+c <- 220 
+
+abatea <- (sector_A_y - MC)/-slope_A
+abateb<-(sector_B_y-MC)/-slope_B
+abatec<-(sector_C_y-MC)/-slope_C
+totalabate<-sum(abatea, abateb, abatec)
+
+abate<-rbind(abatea, abateb, abatec, totalabate)
+
+taxa<-abatea*MC
+taxb<-abateb*MC
+taxc<-abatec*MC
+totaltax<-sum(taxa, taxb, taxc)
+
+tax<-rbind(taxa, taxb, taxc, totaltax)
+
+costa<-MC*(a-abatea)*0.5
+costb<-MC*(b-abateb)*0.5
+costc<-MC*(c-abatec)*0.5
+totalcost<-sum(costa, costb, costc)
+
+cost<-rbind(costa, costb, costc, totalcost)
+  
+
+partb<- cbind(abate, cost,tax)
+colnames(partb)=c("Units abated", "Cost","Tax")
+row.names(partb)=c("Sector A", "Sector B", "Sector C", "Total Country X")
+partb
+```
+
+```{r, echo=FALSE}
+round(partb,0)
+```
+
 
 
 
